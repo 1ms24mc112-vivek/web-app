@@ -1,0 +1,55 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub')
+        IMAGE_ID = "vivekshet112/my_webapp"
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git(
+                    url: 'https://github.com/1ms24mc112-vivek/web-app.git',
+                    branch: 'main'
+                )
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                bat """
+                    docker build -t ${IMAGE_ID}:latest .
+                """
+            }
+        }
+
+        stage('Push to DockerHub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub',
+                                                  usernameVariable: 'USER',
+                                                  passwordVariable: 'PASS')]) {
+
+                    bat """
+                        docker login -u %USER% -p %PASS%
+                        docker push ${IMAGE_ID}:latest
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Cleaning up workspace..."
+            deleteDir()
+        }
+        success {
+            echo "Pipeline succeeded!"
+        }
+        failure {
+            echo "Pipeline failed!"
+        }
+    }
+}
