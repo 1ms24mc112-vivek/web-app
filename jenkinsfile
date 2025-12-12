@@ -3,11 +3,14 @@ pipeline {
 
     environment{
     DOCKERHUB_CREDENTAILS=credentails('dockerhub')
-    
 
-        stage('Run Tests') {
+    ID
+        IMAGE_ID="vivekshet112/my_webapp"
+    }
+    stages{
+        stage('Checkout') {
             steps {
-                sh 'pytest || true'
+                git(url:"https://github.com/1ms
             }
         }
 
