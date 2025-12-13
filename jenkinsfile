@@ -2,34 +2,35 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub')   // Jenkins credentials ID
-        IMAGE_ID = "vivekshet112/my_webapp"
+        IMAGE_NAME = "vivekshet112/my_webapp"
+        IMAGE_TAG  = "latest"
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                git(
-                    url: 'https://github.com/1ms24mc112-vivek/web-app.git',
+                git url: 'https://github.com/1ms24mc112-vivek/web-app.git',
                     branch: 'main'
-                )
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    def dockerImage = docker.build("${IMAGE_NAME}")               
-                    }
+                    docker.build("${env.IMAGE_NAME}:${env.IMAGE_TAG}")
+                }
             }
         }
 
         stage('Push to DockerHub') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS) {
-                        dockerImage.push("latest")
+                    docker.withRegistry(
+                        'https://index.docker.io/v1/',
+                        'dockerhub'          // Jenkins credential ID
+                    ) {
+                        docker.image("${env.IMAGE_NAME}:${env.IMAGE_TAG}").push()
                     }
                 }
             }
@@ -39,7 +40,7 @@ pipeline {
     post {
         always {
             echo "Cleaning up workspace..."
-            deleteDir()
+            cleanWs()
         }
         success {
             echo "Pipeline succeeded!"
